@@ -65,6 +65,8 @@ class GANDataset(Dataset):
 
 transform = transforms.Compose([
     transforms.ToTensor(),
+     transforms.Resize(image_size),
+     transforms.CenterCrop(image_size),
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
@@ -74,3 +76,57 @@ train_data = GANDataset(img_dir='data/keras_png_slices_data/keras_png_slices_tra
 validate_data = GANDataset(img_dir='data/keras_png_slices_data/keras_png_slices_validate', transform=transform)	
 combined_dataset = ConcatDataset([train_data, test_data, validate_data])
 data = DataLoader(combined_dataset, batch_size=128, shuffle=True)
+
+
+# Plot some training images
+real_batch = next(iter(data))
+plt.figure(figsize=(8,8))
+plt.axis("off")
+plt.title("Training Images")
+plt.imshow(np.transpose(vutils.make_grid(real_batch.to(device)[:64], padding=2, normalize=True).cpu(),(1,2,0)))
+plt.show()
+
+# Initialise Weights - Normal Distribution with mean 1 and std 0.02
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
+
+# Generator Function
+class Generator(nn.Module):
+    def __init__(self, ngpu):
+        super(Generator, self).__init__()
+        self.main = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(ngf * 8),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 4),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf * 2),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ngf),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d( ngf, 1, 4, 2, 1, bias=False),
+            nn.Tanh() 
+        )
+
+    def forward(self, input):
+        return self.main(input)
+
+# Initialising the Generator
+netG = Generator(ngpu).to(device)
+
+# Give Generator Initial Weights
+netG.apply(weights_init)
