@@ -8,10 +8,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Set random seed for reproducibility
-manualSeed = 89127341
-random.seed(manualSeed)
-torch.manual_seed(manualSeed)
-torch.use_deterministic_algorithms(True)
+# manualSeed = 89127341
+# random.seed(manualSeed)
+# torch.manual_seed(manualSeed)
+# torch.use_deterministic_algorithms(True)
 
 # Get gpu if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -94,10 +94,18 @@ selected_images = fake[:16]
 # Create a grid of the selected images
 grid = vutils.make_grid(selected_images, nrow=4, padding=2, normalize=True)
 
-# Plot the grid
-plt.figure(figsize=(15,15))
+# single_img.append(fake[0][0].cpu().detach())
+             # Display the first image from the fake batch
+plt.figure(figsize=(5,5))
+plt.imshow(fake[0][0].cpu().detach(), cmap='gray')  # First image, assuming grayscale
+plt.gca().set_axis_off()  # Turn off the axis
+plt.savefig('./single.png', bbox_inches='tight', pad_inches=0)  # Save without border
+plt.show()
+
+
+# # Plot the grid
+plt.figure(figsize=(10,10))
 plt.axis("off")
-plt.title("Generated Images - 200 Epochs")
-plt.imshow(np.transpose(grid.cpu(), (1, 2, 0)))
-plt.savefig('./grid_gen_brain.png', bbox_inches='tight')
+plt.imshow(np.transpose(selected_images, (1, 2, 0)))
+plt.savefig('./grid.png', bbox_inches='tight', pad_inches=0)  # Save without border
 plt.show()
