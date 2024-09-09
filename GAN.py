@@ -48,7 +48,7 @@ dataloader = DataLoader(image_data, batch_size=256, shuffle=True)
 device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
 # Initialise Weights - Normal Distribution with mean 1 and std 0.02
-# Initaliasing wieghts as gausians helps models converge faster
+# Initialising weights as Gaussian's helps models converge faster
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -163,15 +163,15 @@ for epoch in range(num_epochs):
         # Training descriminent - Real data
         # maximize log(D(x)) + log(1 - D(G(z)))
         netD.zero_grad()
-        real_cpu = data[0].to(device)
-        b_size = real_cpu.size(0)
+        real_batch = data[0].to(device)
+        b_size = real_batch.size(0)
         label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
-        output = netD(real_cpu).view(-1)
+        output = netD(real_batch).view(-1)
         errD_real = criterion(output, label)
         errD_real.backward()
         D_x = output.mean().item()
 
-        ## Train Descriminent with all-fake data
+        ## Train Discriminant with all-fake data
         noise = torch.randn(b_size, latent_size, 1, 1, device=device)
         fake = netG(noise)
         label.fill_(fake_label)
@@ -208,7 +208,7 @@ for epoch in range(num_epochs):
             img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
             single_img.append(fake[0][0].cpu().detach())
 
-            # Display the image every 100 iteratiosn to view progression
+            # Display the image every 100 iterations to view progression
             plt.figure(figsize=(5,5))
             plt.axis("off")
             plt.imshow(fake[0][0].cpu().detach(), cmap='gray')
